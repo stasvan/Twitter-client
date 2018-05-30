@@ -1,5 +1,9 @@
-package sample;
+package sample.twitterLogin;
 
+import javafx.scene.text.Font;
+import sample.fonts.Fonts;
+import sample.messageBoxes.AlertBox;
+import sample.messageBoxes.ConfirmPinBox;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -13,6 +17,8 @@ import java.net.URI;
 public class TwitterLogin {
 
     public static Twitter TwitterIs() {
+
+        Font font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 12);
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
                 .setOAuthConsumerKey("0Cj4B7jX58aBX9weNgZJ2ymks")
@@ -35,26 +41,28 @@ public class TwitterLogin {
                 }
             }
             System.out.println("Enter the PIN");
-            String pin = ConfirmPinBox.display();
-
+            String pin = ConfirmPinBox.display(font);
+            if (pin.equals("-1")) {
+                return null;
+            }
             try {
                 Integer.parseInt(pin);
             } catch (NumberFormatException e) {
-                AlertBox.display("Message","Log in fail");
+                AlertBox.display("Message","Pin is not validate", font);
                 return null;
             }
 
-            try {
-                accessToken = twitter.getOAuthAccessToken(requestToken, pin);
-            } catch (TwitterException ignored) {
-                AlertBox.display("Message","Pin is not validate");
-                return null;
-            }
+//            try {
+//                accessToken = twitter.getOAuthAccessToken(requestToken, pin);
+//            } catch (TwitterException ignored) {
+//                AlertBox.display("Message","Pin is not validate", font);
+//                return null;
+//            }
             System.out.println("Got access token.");
             //System.out.println("Access token: " + accessToken.getToken());
             //System.out.println("Access token secret: " + accessToken.getTokenSecret());
         } catch (IllegalStateException | TwitterException ie) {
-            AlertBox.display("Message", "No Internet connection");
+            AlertBox.display("Message", "No Internet connection", font);
             return null;
         }
         System.out.println("ready to twit");

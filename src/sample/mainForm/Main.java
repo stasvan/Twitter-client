@@ -1,15 +1,24 @@
-package sample;
+package sample.mainForm;
 
 import javafx.application.Application;
 
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
-import javafx.scene.text.Text;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.scene.control.Button;
+import sample.messageBoxes.AlertBox;
+import sample.fonts.Fonts;
+import sample.twitterLogin.TwitterLogin;
 import twitter4j.Twitter;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 public class Main extends Application{
 
@@ -20,7 +29,9 @@ public class Main extends Application{
     private BorderPane topPane;
     private boolean centerLogin = true;
     private Button buttonLogOut;
+    private Button buttonLogIn;
     private Twitter twitter;
+    private Font font;
 
     public static void main(String[] args) {
         launch(args);
@@ -28,14 +39,14 @@ public class Main extends Application{
 
     @Override
     public void start(Stage window) {
-        window.setTitle("Twitter client");
+        window.setTitle("Twitter");
         window.setResizable(false);
         window.centerOnScreen();
+        font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 12);
         CreateCenter();
         CreateTop();
         mainBorderPane = new BorderPane();
         CreateMainBorderPane();
-
         Scene scene = new Scene(mainBorderPane, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         window.setScene(scene);
@@ -54,21 +65,22 @@ public class Main extends Application{
         loginGrid.setVgap(8);
         loginGrid.setHgap(10);
 
-        Button loginButton = new Button("Log in");
-        loginButton.setOnAction(e -> LogIn());
-        GridPane.setConstraints(loginButton, 1, 2);
+        buttonLogIn = new Button("Log in");
+        buttonLogIn.setFont(font);
+        buttonLogIn.setOnAction(e -> LogIn());
+        GridPane.setConstraints(buttonLogIn, 1, 2);
 
-        loginGrid.getChildren().addAll(loginButton);
-        loginGrid.setStyle("-fx-background-color: #D3FAFD;");
+        loginGrid.getChildren().addAll(buttonLogIn);
+        loginGrid.setStyle("-fx-background-color: #EDFCFC;");
         //END CENTER
     }
 
     private void CreateMainGrid() {
         mainGrid = new GridPane();
-        mainGrid.setPadding(new Insets(300,10,10,300));
+        mainGrid.setPadding(new Insets(300,10,10,100));
         mainGrid.setVgap(8);
         mainGrid.setHgap(10);
-
+        mainGrid.setStyle("-fx-background-color: #EDFCFC;");
         Label nameLabel = new Label("LOL");
         GridPane.setConstraints(nameLabel, 0, 0);
         mainGrid.getChildren().addAll(nameLabel);
@@ -80,25 +92,38 @@ public class Main extends Application{
         topPane = new BorderPane();
 
         HBox topCenterMenu = new HBox();
-        topCenterMenu.setPadding(new Insets(15,12,35,100));
+        topCenterMenu.setPadding(new Insets(15,0,10,50));
         topCenterMenu.setSpacing(10);
-        topCenterMenu.setStyle("-fx-background-color: #56EFFB;");
-        Text text = new Text("TwitterLogin");
+        topCenterMenu.setStyle("-fx-background-color: #B2F1F5;");
+        Label text = new Label("Twitter Client");
+        Font fontBig = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 60);
+        text.setFont(fontBig);
+        text.setTextFill(Color.web("#4169E1"));
         topCenterMenu.getChildren().addAll(text);
 
         HBox topLeftMenu = new HBox();
-        topLeftMenu.setPadding(new Insets(15,12,35,50));
-        topLeftMenu.setSpacing(10);
-        topLeftMenu.setStyle("-fx-background-color: #56EFFB;");
-        Label logo = new Label("logo");
-        topLeftMenu.getChildren().addAll(logo);
+        topLeftMenu.setPadding(new Insets(5,5,10,10));
+        //topLeftMenu.setSpacing(10);
+        topLeftMenu.setStyle("-fx-background-color: #B2F1F5;");
+        try {
+            ImageView selectedImage = new ImageView();
+            Image logo = new Image(new FileInputStream("src/pics/logo.png"));
+            selectedImage.setImage(logo);
+            topLeftMenu.getChildren().add(selectedImage);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
 
         HBox topRightMenu = new HBox();
-        topRightMenu.setPadding(new Insets(15,12,35,50));
-        topRightMenu.setSpacing(10);
-        topRightMenu.setStyle("-fx-background-color: #56EFFB;");
+        topRightMenu.setPadding(new Insets(45,30,5,0));
+        //topRightMenu.setSpacing(10);
+        topRightMenu.setStyle("-fx-background-color: #B2F1F5;");
         buttonLogOut = new Button("Log out");
-        buttonLogOut.setDisable(true);
+        Font fontOut = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
+        buttonLogOut.setFont(fontOut);
+        buttonLogOut.setTextFill(Color.web("#4169E1"));
+        buttonLogOut.setVisible(false);
         buttonLogOut.setOnAction(e -> LogOut());
         topRightMenu.getChildren().addAll(buttonLogOut);
 
@@ -121,7 +146,7 @@ public class Main extends Application{
             PutCenterLogin();
             System.out.println("log out");
             centerLogin = true;
-            buttonLogOut.setDisable(true);
+            buttonLogOut.setVisible(false);
         }
 
     }
@@ -131,20 +156,18 @@ public class Main extends Application{
         if (twitter != null) {
             PutCenterClient();
             System.out.println("log in");
-            AlertBox.display("Message", "You logged in");
+            AlertBox.display("Message", "You are logged in", font);
             centerLogin = false;
-            buttonLogOut.setDisable(false);
+            buttonLogOut.setVisible(true);
         } else {
             System.out.println("log in fail");
         }
     }
 
-
     private void PutCenterClient() {
         CreateMainGrid();
         mainBorderPane.setCenter(mainGrid);
     }
-
 
     private void PutCenterLogin() {
         CreateCenter();
