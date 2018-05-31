@@ -2,11 +2,17 @@ package sample.mainForm;
 
 import javafx.application.Application;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -16,22 +22,35 @@ import sample.messageBoxes.AlertBox;
 import sample.fonts.Fonts;
 import sample.twitterLogin.TwitterLogin;
 import twitter4j.Twitter;
+import twitter4j.TwitterException;
+import twitter4j.User;
 
+import javax.imageio.ImageIO;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+import static twitter4j.JSONObjectType.Type.LIMIT;
 
 public class Main extends Application{
 
     private final int WINDOW_HEIGHT = 600, WINDOW_WIDTH = 900;
     private BorderPane mainBorderPane;
-    private GridPane loginGrid;
+    private VBox loginGrid;
     private GridPane mainGrid;
     private BorderPane topPane;
     private boolean centerLogin = true;
     private Button buttonLogOut;
     private Button buttonLogIn;
+    private Label labelLogIn;
+    private Label welcom;
+    private Button twitButton;
+    private ImageView selectedImage;
+    private TextArea twitArea;
     private Twitter twitter;
-    private Font font;
+    private Font font, fontMainGridButtons;
+    private User user;
 
     public static void main(String[] args) {
         launch(args);
@@ -42,7 +61,8 @@ public class Main extends Application{
         window.setTitle("Twitter");
         window.setResizable(false);
         window.centerOnScreen();
-        font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 12);
+        window.getIcons().add(new Image("file:src/pics/logo.png"));
+        font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
         CreateCenter();
         CreateTop();
         mainBorderPane = new BorderPane();
@@ -55,35 +75,76 @@ public class Main extends Application{
 
     private void CreateCenter() {
         CreateLoginGrid();
-        CreateMainGrid();
+        //CreateMainGrid();
     }
 
     private void CreateLoginGrid() {
         //CENTER
-        loginGrid = new GridPane();
-        loginGrid.setPadding(new Insets(300,10,10,300));
-        loginGrid.setVgap(8);
-        loginGrid.setHgap(10);
+        loginGrid = new VBox();
+        loginGrid.setAlignment(Pos.CENTER);
+        loginGrid.setPadding(new Insets(80,0,10,0));
 
         buttonLogIn = new Button("Log in");
         buttonLogIn.setFont(font);
         buttonLogIn.setOnAction(e -> LogIn());
-        GridPane.setConstraints(buttonLogIn, 1, 2);
 
-        loginGrid.getChildren().addAll(buttonLogIn);
+        Font fontLabelLogIn = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 30);
+        labelLogIn = new Label("Press the button to Log in!");
+        welcom = new Label("Welcome!");
+        labelLogIn.setFont(fontLabelLogIn);
+        fontLabelLogIn = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 60);
+        welcom.setFont(fontLabelLogIn);
+        labelLogIn.setTextFill(Color.web("#C59AF9"));
+
+        loginGrid.getChildren().addAll(welcom, labelLogIn, buttonLogIn);
         loginGrid.setStyle("-fx-background-color: #EDFCFC;");
         //END CENTER
     }
 
     private void CreateMainGrid() {
+        //fontMainGridButtons  = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
         mainGrid = new GridPane();
-        mainGrid.setPadding(new Insets(300,10,10,100));
-        mainGrid.setVgap(8);
+        mainGrid.setPadding(new Insets(10,10,10,10));
+        mainGrid.setVgap(10);
         mainGrid.setHgap(10);
         mainGrid.setStyle("-fx-background-color: #EDFCFC;");
-        Label nameLabel = new Label("LOL");
-        GridPane.setConstraints(nameLabel, 0, 0);
-        mainGrid.getChildren().addAll(nameLabel);
+        twitArea = new TextArea();
+        twitArea.setPrefColumnCount(45);
+        twitArea.setPrefRowCount(4);
+        final int LIMIT = 280;
+        twitArea.lengthProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.intValue() > oldValue.intValue()) {
+                // Check if the new character is greater than LIMIT
+                if (twitArea.getText().length() >= LIMIT) {
+                    // if it's 11th character then just setText to previous
+                    // one
+                    twitArea.setText(twitArea.getText().substring(0, LIMIT));
+                }
+            }
+        });
+        twitArea.setWrapText(true);
+        GridPane.setConstraints(twitArea, 0, 0);
+
+        twitButton = new Button("Twit");
+        twitButton.setPadding(new Insets(0,10,0,10));
+        twitButton.setFont(font);
+        GridPane.setConstraints(twitButton, 1, 0);
+
+        selectedImage = new ImageView();
+
+        try {
+            user = twitter.showUser(twitter.getId());
+        } catch (TwitterException e) {
+            e.printStackTrace();
+        }
+        String path = user.getOriginalProfileImageURL();
+        Image logo = new Image(path);
+        selectedImage.setImage(logo);
+        selectedImage.setFitHeight(100);
+        selectedImage.setFitWidth(100);
+        GridPane.setConstraints(selectedImage, 2, 0);
+
+        mainGrid.getChildren().addAll(twitArea, twitButton, selectedImage);
         //END CENTER
     }
 
@@ -120,8 +181,7 @@ public class Main extends Application{
         //topRightMenu.setSpacing(10);
         topRightMenu.setStyle("-fx-background-color: #B2F1F5;");
         buttonLogOut = new Button("Log out");
-        Font fontOut = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
-        buttonLogOut.setFont(fontOut);
+        buttonLogOut.setFont(font);
         buttonLogOut.setTextFill(Color.web("#4169E1"));
         buttonLogOut.setVisible(false);
         buttonLogOut.setOnAction(e -> LogOut());
@@ -143,6 +203,7 @@ public class Main extends Application{
 
     private void LogOut() {
         if (!centerLogin) {
+            twitter = null;
             PutCenterLogin();
             System.out.println("log out");
             centerLogin = true;

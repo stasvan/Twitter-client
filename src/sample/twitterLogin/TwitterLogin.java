@@ -18,7 +18,7 @@ public class TwitterLogin {
 
     public static Twitter TwitterIs() {
 
-        Font font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 12);
+        Font font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
         ConfigurationBuilder cb = new ConfigurationBuilder();
         cb.setDebugEnabled(true)
                 .setOAuthConsumerKey("0Cj4B7jX58aBX9weNgZJ2ymks")
@@ -30,18 +30,12 @@ public class TwitterLogin {
         try {
             RequestToken requestToken = twitter.getOAuthRequestToken();
             System.out.println("Got request token.");
-            AccessToken accessToken = null;
 
-
-            Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
-            if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
-                try {
-                    desktop.browse(URI.create(requestToken.getAuthorizationURL())); } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
             System.out.println("Enter the PIN");
-            String pin = ConfirmPinBox.display(font);
+            String pin;
+            Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+            pin = ConfirmPinBox.display(font, desktop, requestToken);
+
             if (pin.equals("-1")) {
                 return null;
             }
@@ -52,12 +46,12 @@ public class TwitterLogin {
                 return null;
             }
 
-//            try {
-//                accessToken = twitter.getOAuthAccessToken(requestToken, pin);
-//            } catch (TwitterException ignored) {
-//                AlertBox.display("Message","Pin is not validate", font);
-//                return null;
-//            }
+            try {
+                twitter.getOAuthAccessToken(requestToken, pin);
+            } catch (TwitterException ignored) {
+                AlertBox.display("Message","Pin is not validate", font);
+                return null;
+            }
             System.out.println("Got access token.");
             //System.out.println("Access token: " + accessToken.getToken());
             //System.out.println("Access token secret: " + accessToken.getTokenSecret());
