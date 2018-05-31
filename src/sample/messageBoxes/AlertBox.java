@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -22,6 +23,7 @@ public class AlertBox {
 
         Label label = new Label();
         label.setFont(font);
+        label.setTextFill(Color.web("#C59AF9"));
         label.setText(message);
         Button closeButton = new Button("Ok");
         closeButton.setFont(font);
