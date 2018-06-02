@@ -16,7 +16,7 @@ import java.net.URI;
 
 public class TwitterLogin {
 
-    public static Twitter TwitterIs() {
+    public static Twitter LogIn() {
 
         Font font = Fonts.LoadFont("src/fonts/ObelixPro.ttf", 20);
         ConfigurationBuilder cb = new ConfigurationBuilder();
@@ -53,8 +53,6 @@ public class TwitterLogin {
                 return null;
             }
             System.out.println("Got access token.");
-            //System.out.println("Access token: " + accessToken.getToken());
-            //System.out.println("Access token secret: " + accessToken.getTokenSecret());
         } catch (IllegalStateException | TwitterException ie) {
             AlertBox.display("Message", "No Internet connection", font);
             return null;
@@ -62,6 +60,4 @@ public class TwitterLogin {
         System.out.println("ready to twit");
         return twitter;
     }
-
-
 }

@@ -21,14 +21,15 @@ import twitter4j.*;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Main extends Application{
 
     private final int WINDOW_HEIGHT = 700, WINDOW_WIDTH = 1000;
     private BorderPane mainBorderPane;
     private VBox loginGrid;
+    private VBox showBox;
+    private HBox tweetTweet;
+    private Label whatToShow;
     private GridPane mainGrid;
     private BorderPane topPane;
     private boolean centerLogin = true;
@@ -43,12 +44,16 @@ public class Main extends Application{
     private Button tweetButton;
     private Button showFriendsTweets;
     private Button showMyTweets;
+    private Button refresh;
     private ImageView selectedImage;
     private TextArea tweetArea;
     private TextArea tweetsArea;
     private Twitter twitter;
     private Font font;
     private User user;
+    private String myTweets;
+    private String friendsTweets;
+    private int id;
 
     public static void main(String[] args) {
         launch(args);
@@ -105,11 +110,13 @@ public class Main extends Application{
         mainGrid = new GridPane();
         mainGrid.setPrefSize(100,100);
         mainGrid.setPadding(new Insets(10,10,10,10));
-        mainGrid.setVgap(25);
-        mainGrid.setHgap(25);
+        mainGrid.setVgap(20);
+        mainGrid.setHgap(20);
         mainGrid.setStyle("-fx-background-color: #EDFCFC;");
+        tweetTweet = new HBox();
+
         tweetArea = new TextArea();
-        tweetArea.setPrefColumnCount(35);
+        tweetArea.setPrefColumnCount(45);
         tweetArea.setPrefRowCount(4);
         tweetArea.setFont(new Font(15));
         tweetArea.setFocusTraversable(true);
@@ -122,10 +129,10 @@ public class Main extends Application{
             }
         });
         tweetArea.setWrapText(true);
-        mainGrid.add(tweetArea, 0, 0);
+        //mainGrid.add(tweetArea, 0, 0);
 
         VBox butVBox = new VBox();
-        butVBox.setPadding(new Insets(0, 5, 0, 5));
+        butVBox.setPadding(new Insets(0, 10, 0, 10));
         tweetButton = new Button("Tweet");
         tweetButton.setOnAction(e -> Twit(twitter));
         tweetButton.setPadding(new Insets(5, 20, 5, 20));
@@ -150,7 +157,10 @@ public class Main extends Application{
         followingCount.setPadding(new Insets(0, 0, 5, 0));
 
         butVBox.getChildren().addAll(nick,tweetsCount, followersCount, followingCount, tweetButton);
-        mainGrid.add(butVBox, 1, 0);
+        //mainGrid.add(butVBox, 1, 0);
+
+        tweetTweet.getChildren().addAll(tweetArea, butVBox);
+        mainGrid.add(tweetTweet, 0, 0);
 
         selectedImage = new ImageView();
 
@@ -164,10 +174,10 @@ public class Main extends Application{
         selectedImage.setImage(logo);
         selectedImage.setFitHeight(149);
         selectedImage.setFitWidth(149);
-        mainGrid.add(selectedImage, 2, 0);
+        mainGrid.add(selectedImage, 1, 0);
 
         tweetsArea = new TextArea();
-        tweetsArea.setPrefColumnCount(44);
+        tweetsArea.setPrefColumnCount(60);
         tweetsArea.setPrefRowCount(18);
         tweetsArea.setFont(new Font(15));
         tweetsArea.setFocusTraversable(true);
@@ -175,15 +185,40 @@ public class Main extends Application{
         tweetsArea.setEditable(false);
         mainGrid.add(tweetsArea, 0, 1);
 
-        showFriendsTweets = new Button("Show F");
-        showFriendsTweets.setOnAction(e -> tweetsArea.setText(FriendsTweets().toString()));
-        mainGrid.add(showFriendsTweets, 1, 1);
+        showBox = new VBox();
+        showBox.setSpacing(15);
+        showBox.setPrefWidth(150);
 
-        showMyTweets = new Button("Show M");
-        showMyTweets.setOnAction(e -> tweetsArea.setText(MyTweets().toString()));
-        mainGrid.add(showMyTweets, 2, 1);
+        whatToShow = new Label("What to show:");
+        Font fontWhatToShow = new Font(20);
+        whatToShow.setFont(fontWhatToShow);
+        whatToShow.setTextFill(Color.web("#C59AF9"));
+        showFriendsTweets = new Button("Friends'\ntweets");
+        showFriendsTweets.setOnAction(e -> {
+            id = 1;
+            tweetsArea.setText(friendsTweets);
+        });
+        showFriendsTweets.setFont(font);
+        showFriendsTweets.setMinWidth(showBox.getPrefWidth());
+        showFriendsTweets.setPadding(new Insets(10,10,10,10));
+        showMyTweets = new Button("    My\ntweets");
+        showMyTweets.setOnAction(e -> {
+            id = 0;
+            tweetsArea.setText(myTweets);
+        });
+        showMyTweets.setFont(font);
+        showMyTweets.setMinWidth(showBox.getPrefWidth());
+        showMyTweets.setPadding(new Insets(10,10,10,10));
+        refresh = new Button("Refresh");
+        refresh.setOnAction(e -> UpdateAllClientInfo(id));
+        refresh.setFont(font);
+        refresh.setPadding(new Insets(10,10,10,10));
+        refresh.setMinWidth(showBox.getPrefWidth());
 
-        mainGrid.setGridLinesVisible(true);
+        showBox.getChildren().addAll(whatToShow,showMyTweets,showFriendsTweets, refresh);
+        mainGrid.add(showBox, 1, 1);
+
+        //mainGrid.setGridLinesVisible(true);
 
     }
 
@@ -195,14 +230,14 @@ public class Main extends Application{
                 if (!tweetArea.getText().trim().equals("")) {
                     twitter.updateStatus(tweetArea.getText());
                     tweetArea.setText("");
-                    AlertBox.display("Message", "Tweetted!", font);
+                    AlertBox.display("Message", "Tweeted!", font);
                 } else {
                     AlertBox.display("Message", "Tweet is empty!", font);
                 }
             } catch (TwitterException e) {
                 AlertBox.display("Message", "Error", font);
             }
-            UpdateClientInfo();
+            //UpdateAllClientInfo();
         }
 
     }
@@ -274,12 +309,12 @@ public class Main extends Application{
 
     private void LogIn() {
         buttonLogIn.setDisable(true);
-        twitter = TwitterLogin.TwitterIs();
+        twitter = TwitterLogin.LogIn();
         if (twitter != null) {
             PutCenterClient();
             System.out.println("log in");
             //AlertBox.display("Message", "You are logged in", font);
-            UpdateClientInfo();
+            UpdateAllClientInfo(0);
             centerLogin = false;
             buttonLogOut.setVisible(true);
         } else {
@@ -288,7 +323,7 @@ public class Main extends Application{
         buttonLogIn.setDisable(false);
     }
 
-    private void UpdateClientInfo() {
+    private void UpdateAllClientInfo(int id) {
 
         try {
             user = twitter.showUser(twitter.getId());
@@ -299,40 +334,47 @@ public class Main extends Application{
         tweetsCount.setText("Tweets: " + user.getStatusesCount());
         followersCount.setText("Followers: " + user.getFollowersCount());
         followingCount.setText("Following: " + user.getFriendsCount());
-        tweetsArea.setText(MyTweets().toString());
+        myTweets = MyTweets();
+        friendsTweets = FriendsTweets();
+        if (id == 0) {
+            tweetsArea.setText(myTweets);
+        } else if (id == 1){
+            tweetsArea.setText(friendsTweets);
+        }
 
     }
 
-    private StringBuilder MyTweets() {
+    private String MyTweets() {
         ResponseList<Status> list;
-        StringBuilder str = new StringBuilder("-----------------------------------------------------------------------------------------------------\n");
+        StringBuilder strB = new StringBuilder("Your tweets:\n-------------------------------------------------------------------------------------------------------------------------------\n");
         try {
             list = twitter.getUserTimeline();
             for (Status status : list) {
-                str.append("@").append(status.getUser().getScreenName()).append(" - ").append(status.getText()).append("\n").append("-----------------------------------------------------------------------------------------------------\n");
+                strB.append("@").append(status.getUser().getScreenName()).append(" - ").append(status.getText()).append("\n").append("-------------------------------------------------------------------------------------------------------------------------------\n");
             }
         } catch (TwitterException e) {
-            e.printStackTrace();
+            AlertBox.display("Message","User's rate\nlimit exceeded", font);
+            return myTweets;
         }
 
-        return str;
+        return strB.toString();
     }
 
-    private StringBuilder FriendsTweets() {
+    private String FriendsTweets() {
         ResponseList<Status> list;
-        StringBuilder str = new StringBuilder("-----------------------------------------------------------------------------------------------------\n");
+        StringBuilder strB = new StringBuilder("Friends' tweets:\n-------------------------------------------------------------------------------------------------------------------------------\n");
         try {
             list = twitter.getHomeTimeline();
             for (Status status : list) {
-                str.append("@").append(status.getUser().getScreenName()).append(" - ").append(status.getText()).append("\n").append("-----------------------------------------------------------------------------------------------------\n");
+                strB.append("@").append(status.getUser().getScreenName()).append(" - ").append(status.getText()).append("\n").append("-------------------------------------------------------------------------------------------------------------------------------\n");
             }
         } catch (TwitterException e) {
-            e.printStackTrace();
+            AlertBox.display("Message","Friends' rate\nlimit exceeded", font);
+            return friendsTweets;
         }
 
-        return str;
+        return strB.toString();
     }
-
 
     private void PutCenterClient() {
         CreateMainGrid();
