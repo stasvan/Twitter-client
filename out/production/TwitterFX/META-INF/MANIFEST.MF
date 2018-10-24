@@ -1,4 +1,0 @@
-Manifest-Version: 1.0
-Class-Path: D:\BSUIR\4\КСиС\TwitterFX\src\
-Main-Class: sample.mainForm.Main
-
